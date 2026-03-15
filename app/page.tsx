@@ -1,335 +1,267 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const comparisonData = {
-  models: [
-    {
-      name: "GLM-5",
-      tagline: "Flagship Foundation Model",
-      description:
-        "Z.AI's flagship open-source foundation model engineered for complex systems design and long-horizon agent workflows.",
-      params: "744B total / 40B active",
-      context: "200K tokens",
-      maxOutput: "128K tokens",
-      inputPrice: "$0.72",
-      outputPrice: "$2.30",
-      focus: ["Complex coding", "System engineering", "Long-horizon tasks", "Backend refactoring"],
-      benchmarks: { swebench: "77.8", terminalBench: "56.2" },
-      color: "from-blue-500 to-indigo-600",
-      borderColor: "border-blue-400",
-      badge: "STABLE",
-      badgeColor: "bg-blue-500",
-    },
-    {
-      name: "GLM-5-Turbo",
-      tagline: "High-Speed Agent Variant",
-      description:
-        "A high-speed variant of GLM-5, optimized for agent-driven environments such as OpenClaw. Faster inference, designed for real-time interactions.",
-      params: "744B total / 40B active",
-      context: "200K tokens",
-      maxOutput: "128K tokens",
-      inputPrice: "$0.96",
-      outputPrice: "$3.20",
-      focus: ["Agent workflows", "Fast inference", "OpenClaw scenarios", "Real-time tool calls"],
-      benchmarks: { swebench: "TBD", terminalBench: "TBD" },
-      color: "from-orange-500 to-red-600",
-      borderColor: "border-orange-400",
-      badge: "NEW",
-      badgeColor: "bg-orange-500",
-    },
-  ],
-};
+function GlowCard({ children, className = "", glow = "blue" }: { children: React.ReactNode; className?: string; glow?: string }) {
+  const colors: Record<string, string> = {
+    blue: "hover:shadow-[0_0_40px_rgba(59,130,246,0.3)]",
+    orange: "hover:shadow-[0_0_40px_rgba(249,115,22,0.3)]",
+    red: "hover:shadow-[0_0_40px_rgba(239,68,68,0.2)]",
+  };
+  return (
+    <div className={`relative group ${className}`}>
+      <div className="absolute -inset-[1px] bg-gradient-to-br from-white/10 via-white/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+      <div className={`relative bg-[#0a0a0f] rounded-2xl border border-white/[0.06] p-8 transition-all duration-700 ${colors[glow] || ""}`}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
-const features = [
-  { name: "Thinking Mode", glm5: true, turbo: true },
-  { name: "Streaming Output", glm5: true, turbo: true },
-  { name: "Function Calling", glm5: true, turbo: true },
-  { name: "Context Caching", glm5: true, turbo: true },
-  { name: "Structured Output", glm5: true, turbo: true },
-  { name: "Agentic Coding", glm5: true, turbo: true },
-];
+function AnimatedNumber({ value, suffix = "" }: { value: string; suffix?: string }) {
+  const [display, setDisplay] = useState("—");
+  useEffect(() => {
+    const t = setTimeout(() => setDisplay(value), 800);
+    return () => clearTimeout(t);
+  }, [value]);
+  return <span>{display}{suffix}</span>;
+}
 
 const verdict = [
-  {
-    category: "Coding complejo",
-    winner: "GLM-5",
-    reason: "Benchmarks comprobados, comparable a Claude Opus 4.5",
-  },
-  {
-    category: "Agent responses",
-    winner: "GLM-5-Turbo",
-    reason: "Optimizado para inferencia rápida y entornos de agentes",
-  },
-  {
-    category: "Costo",
-    winner: "GLM-5",
-    reason: "33% más barato en input, 28% más barato en output",
-  },
-  {
-    category: "Latencia",
-    winner: "GLM-5-Turbo",
-    reason: "Diseñado para velocidad, menor time-to-first-token",
-  },
-  {
-    category: "Novedad",
-    winner: "GLM-5-Turbo",
-    reason: "Lanzado hoy (15 Mar 2026), datos limitados",
-  },
-  {
-    category: "Confiabilidad",
-    winner: "GLM-5",
-    reason: "Probado en producción desde Feb 2026, resultados consistentes",
-  },
+  { cat: "Coding", winner: "GLM-5", reason: "Benchmarks comprobados (SWE-bench 77.8)", color: "blue" },
+  { cat: "Agent Speed", winner: "Turbo", reason: "Optimizado para inferencia rápida", color: "orange" },
+  { cat: "Precio", winner: "GLM-5", reason: "33% más barato en input/output", color: "blue" },
+  { cat: "Latencia", winner: "Turbo", reason: "Menor time-to-first-token", color: "orange" },
+  { cat: "Confiabilidad", winner: "GLM-5", reason: "Probado en producción desde Feb 2026", color: "blue" },
+  { cat: "Novedad", winner: "Turbo", reason: "Lanzado hoy, datos limitados", color: "orange" },
 ];
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"compare" | "verdict" | "features">("compare");
+  const [tab, setTab] = useState<"overview" | "price" | "verdict">("overview");
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => { setLoaded(true); }, []);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      {/* Header */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950" />
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900 via-transparent to-orange-900" />
-        <div className="relative max-w-6xl mx-auto px-6 pt-16 pb-12 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-800/80 rounded-full border border-gray-700 mb-6">
-            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            <span className="text-sm text-gray-300">Live Comparison — March 15, 2026</span>
+    <div className="min-h-screen bg-[#06060b] text-white overflow-hidden" style={{ fontFamily: "'Outfit', sans-serif" }}>
+      {/* Grain overlay */}
+      <div className="fixed inset-0 pointer-events-none z-50 opacity-[0.03]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")" }} />
+
+      {/* Grid background */}
+      <div className="fixed inset-0 pointer-events-none" style={{
+        backgroundImage: "linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)",
+        backgroundSize: "60px 60px",
+      }} />
+
+      {/* Hero */}
+      <div className="relative pt-20 pb-24 px-6">
+        {/* Top glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full opacity-20 blur-[120px]" style={{ background: "radial-gradient(circle, #3b82f6 0%, #f97316 50%, transparent 70%)" }} />
+
+        <div className="relative max-w-5xl mx-auto text-center">
+          <div className={`transition-all duration-1000 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/[0.03] mb-8 backdrop-blur-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[11px] uppercase tracking-[0.2em] text-white/50">Live — March 15, 2026</span>
+            </div>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">GLM-5</span>
-            <span className="text-gray-500 mx-4">vs</span>
-            <span className="bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">GLM-5-Turbo</span>
+
+          <h1 className={`text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[0.85] transition-all duration-1000 delay-200 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+            <span className="block bg-gradient-to-br from-sky-300 via-blue-500 to-indigo-600 bg-clip-text text-transparent">GLM‑5</span>
+            <span className="block text-white/20 my-2 md:my-4 text-3xl md:text-5xl font-light tracking-[0.3em]">VERSUS</span>
+            <span className="block bg-gradient-to-br from-amber-300 via-orange-500 to-red-600 bg-clip-text text-transparent">GLM‑5<span className="text-white/30 font-light">‑Turbo</span></span>
           </h1>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Comparación detallada entre el modelo flagship de Z.AI y su variante de alta velocidad optimizada para agentes
-          </p>
-          <p className="text-sm text-gray-600 mt-3">
-            Creado por Clawy 🐾 usando GLM-5-Turbo | Deploy automático desde OpenClaw
+
+          <p className={`mt-8 text-white/30 max-w-md mx-auto text-sm leading-relaxed transition-all duration-1000 delay-500 ${loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            Built entirely by GLM‑5‑Turbo as a live capability test<br />
+            <span className="text-white/20">Clawy 🐾 × Z.AI × OpenClaw</span>
           </p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="max-w-6xl mx-auto px-6 mb-8">
-        <div className="flex gap-2 bg-gray-900 rounded-xl p-1.5 border border-gray-800 w-fit mx-auto">
-          {(["compare", "features", "verdict"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === tab
-                  ? "bg-gray-700 text-white shadow-lg"
-                  : "text-gray-400 hover:text-white hover:bg-gray-800"
-              }`}
-            >
-              {tab === "compare" ? "📊 Comparación" : tab === "features" ? "⚡ Features" : "🏆 Veredicto"}
+      <div className="max-w-5xl mx-auto px-6 mb-16">
+        <div className="flex gap-1 p-1 bg-white/[0.03] rounded-xl border border-white/[0.06] w-fit mx-auto backdrop-blur-sm">
+          {(["overview", "price", "verdict"] as const).map((t) => (
+            <button key={t} onClick={() => setTab(t)}
+              className={`px-6 py-2.5 rounded-lg text-[11px] uppercase tracking-[0.15em] transition-all duration-500 ${tab === t ? "bg-white/[0.08] text-white shadow-lg" : "text-white/30 hover:text-white/60"}`}>
+              {t}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Compare Tab */}
-      {activeTab === "compare" && (
-        <div className="max-w-6xl mx-auto px-6 pb-20">
+      {/* Overview Tab */}
+      {tab === "overview" && (
+        <div className="max-w-5xl mx-auto px-6 pb-32">
           <div className="grid md:grid-cols-2 gap-6">
-            {comparisonData.models.map((model) => (
-              <div
-                key={model.name}
-                className={`relative bg-gray-900 rounded-2xl border ${model.borderColor} p-8 hover:scale-[1.02] transition-transform duration-300`}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <span
-                    className={`px-3 py-1 ${model.badgeColor} rounded-full text-xs font-bold tracking-wider`}
-                  >
-                    {model.badge}
-                  </span>
-                  <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${model.color}`} />
-                </div>
-                <h2
-                  className={`text-3xl font-bold mb-1 bg-gradient-to-r ${model.color} bg-clip-text text-transparent`}
-                >
-                  {model.name}
-                </h2>
-                <p className="text-gray-400 mb-4 text-sm">{model.tagline}</p>
-                <p className="text-gray-300 text-sm mb-6 leading-relaxed">{model.description}</p>
-
-                <div className="space-y-3">
-                  <Row label="Parameters" value={model.params} />
-                  <Row label="Context Window" value={model.context} />
-                  <Row label="Max Output" value={model.maxOutput} />
-                  <Row
-                    label="Input Price"
-                    value={`${model.inputPrice}/M tokens`}
-                    highlight={model.inputPrice === "$0.72"}
-                  />
-                  <Row
-                    label="Output Price"
-                    value={`${model.outputPrice}/M tokens`}
-                    highlight={model.outputPrice === "$2.30"}
-                  />
-                </div>
-
-                <div className="mt-6">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Optimized for</p>
-                  <div className="flex flex-wrap gap-2">
-                    {model.focus.map((f) => (
-                      <span
-                        key={f}
-                        className="px-2.5 py-1 bg-gray-800 rounded-md text-xs text-gray-300 border border-gray-700"
-                      >
-                        {f}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-6 grid grid-cols-2 gap-3">
-                  <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700/50">
-                    <p className="text-xs text-gray-500 mb-1">SWE-bench</p>
-                    <p className="text-2xl font-bold text-white">{model.benchmarks.swebench}</p>
-                  </div>
-                  <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700/50">
-                    <p className="text-xs text-gray-500 mb-1">Terminal Bench</p>
-                    <p className="text-2xl font-bold text-white">{model.benchmarks.terminalBench}</p>
-                  </div>
+            {/* GLM-5 Card */}
+            <GlowCard glow="blue">
+              <div className="flex items-center justify-between mb-6">
+                <span className="px-2.5 py-1 bg-blue-500/10 text-blue-400 rounded-md text-[10px] uppercase tracking-[0.2em] border border-blue-500/20">Flagship</span>
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600" />
+              </div>
+              <h2 className="text-4xl font-black tracking-tight bg-gradient-to-r from-sky-300 to-blue-500 bg-clip-text text-transparent mb-2">GLM‑5</h2>
+              <p className="text-[12px] text-white/25 mb-8 uppercase tracking-wider" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Foundation Model</p>
+              <p className="text-white/40 text-sm leading-relaxed mb-8">
+                Z.AI&apos;s flagship model. State-of-the-art open-source performance. 744B parameters with DeepSeek Sparse Attention.
+              </p>
+              <div className="space-y-4">
+                <Stat label="Params" value="744B / 40B active" />
+                <Stat label="Context" value="200K tokens" />
+                <Stat label="Max Output" value="128K tokens" />
+                <Stat label="SWE-bench" value="77.8" highlight />
+                <Stat label="Terminal Bench" value="56.2" highlight />
+              </div>
+              <div className="mt-8 pt-6 border-t border-white/[0.06]">
+                <p className="text-[10px] text-white/20 uppercase tracking-wider mb-3">Optimized For</p>
+                <div className="flex flex-wrap gap-2">
+                  {["Complex coding", "System engineering", "Long-horizon tasks", "Deep debugging"].map((t) => (
+                    <span key={t} className="px-2.5 py-1 bg-white/[0.03] rounded-md text-[11px] text-white/40 border border-white/[0.06]">{t}</span>
+                  ))}
                 </div>
               </div>
-            ))}
+            </GlowCard>
+
+            {/* Turbo Card */}
+            <GlowCard glow="orange">
+              <div className="flex items-center justify-between mb-6">
+                <span className="px-2.5 py-1 bg-orange-500/10 text-orange-400 rounded-md text-[10px] uppercase tracking-[0.2em] border border-orange-500/20">New</span>
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-600" />
+              </div>
+              <h2 className="text-4xl font-black tracking-tight bg-gradient-to-r from-amber-300 to-red-500 bg-clip-text text-transparent mb-2">GLM‑5‑Turbo</h2>
+              <p className="text-[12px] text-white/25 mb-8 uppercase tracking-wider" style={{ fontFamily: "'JetBrains Mono', monospace" }}>High-Speed Agent Variant</p>
+              <p className="text-white/40 text-sm leading-relaxed mb-8">
+                Fast inference optimized for agent-driven environments. Specifically designed for OpenClaw and real-time interactions.
+              </p>
+              <div className="space-y-4">
+                <Stat label="Params" value="744B / 40B active" />
+                <Stat label="Context" value="200K tokens" />
+                <Stat label="Max Output" value="128K tokens" />
+                <Stat label="SWE-bench" value="TBD" />
+                <Stat label="Terminal Bench" value="TBD" />
+              </div>
+              <div className="mt-8 pt-6 border-t border-white/[0.06]">
+                <p className="text-[10px] text-white/20 uppercase tracking-wider mb-3">Optimized For</p>
+                <div className="flex flex-wrap gap-2">
+                  {["Agent workflows", "Fast inference", "OpenClaw", "Real-time tool calls"].map((t) => (
+                    <span key={t} className="px-2.5 py-1 bg-white/[0.03] rounded-md text-[11px] text-white/40 border border-white/[0.06]">{t}</span>
+                  ))}
+                </div>
+              </div>
+            </GlowCard>
           </div>
 
-          {/* Price Comparison Bar */}
-          <div className="mt-10 bg-gray-900 rounded-2xl border border-gray-800 p-8">
-            <h3 className="text-xl font-bold mb-6 text-center">💰 Comparación de Precios (por 1M tokens)</h3>
-            <div className="space-y-6">
-              <div>
-                <p className="text-sm text-gray-400 mb-2">Input Tokens</p>
-                <div className="flex items-center gap-4">
-                  <span className="text-xs text-gray-500 w-20">GLM-5</span>
-                  <div className="flex-1 bg-gray-800 rounded-full h-6 overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-end pr-3" style={{ width: "72%" }}>
-                      <span className="text-xs font-bold">$0.72</span>
-                    </div>
+          {/* Shared Features */}
+          <div className="mt-12">
+            <GlowCard>
+              <p className="text-[10px] text-white/20 uppercase tracking-[0.3em] mb-6">Shared Capabilities</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {["Thinking Mode", "Streaming", "Function Calling", "Context Caching", "Structured Output", "Agentic Coding"].map((f) => (
+                  <div key={f} className="flex items-center gap-3 py-3 px-4 bg-white/[0.02] rounded-xl border border-white/[0.04]">
+                    <span className="text-emerald-400 text-xs">◆</span>
+                    <span className="text-white/50 text-sm">{f}</span>
                   </div>
-                  <span className="text-xs text-gray-500 w-20">GLM-5-Turbo</span>
-                  <div className="flex-1 bg-gray-800 rounded-full h-6 overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-end pr-3" style={{ width: "96%" }}>
-                      <span className="text-xs font-bold">$0.96</span>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
-              <div>
-                <p className="text-sm text-gray-400 mb-2">Output Tokens</p>
-                <div className="flex items-center gap-4">
-                  <span className="text-xs text-gray-500 w-20">GLM-5</span>
-                  <div className="flex-1 bg-gray-800 rounded-full h-6 overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-end pr-3" style={{ width: "72%" }}>
-                      <span className="text-xs font-bold">$2.30</span>
-                    </div>
-                  </div>
-                  <span className="text-xs text-gray-500 w-20">GLM-5-Turbo</span>
-                  <div className="flex-1 bg-gray-800 rounded-full h-6 overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-end pr-3" style={{ width: "100%" }}>
-                      <span className="text-xs font-bold">$3.20</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <p className="text-center text-xs text-gray-600 mt-4">GLM-5 es ~33% más barato en input y ~28% más barato en output</p>
+            </GlowCard>
           </div>
         </div>
       )}
 
-      {/* Features Tab */}
-      {activeTab === "features" && (
-        <div className="max-w-4xl mx-auto px-6 pb-20">
-          <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
-            <div className="grid grid-cols-3 gap-4 p-6 bg-gray-800/50 border-b border-gray-700">
-              <p className="text-sm text-gray-400 font-medium">Feature</p>
-              <p className="text-sm text-blue-400 font-medium text-center">GLM-5</p>
-              <p className="text-sm text-orange-400 font-medium text-center">GLM-5-Turbo</p>
+      {/* Price Tab */}
+      {tab === "price" && (
+        <div className="max-w-3xl mx-auto px-6 pb-32">
+          <GlowCard>
+            <p className="text-[10px] text-white/20 uppercase tracking-[0.3em] mb-8">Per Million Tokens</p>
+            <div className="space-y-10">
+              <PriceRow label="INPUT" a="$0.72" b="$0.96" aW={72} bW={96} />
+              <PriceRow label="OUTPUT" a="$2.30" b="$3.20" aW={72} bW={100} />
             </div>
-            {features.map((f, i) => (
-              <div
-                key={f.name}
-                className={`grid grid-cols-3 gap-4 p-6 items-center ${i < features.length - 1 ? "border-b border-gray-800" : ""}`}
-              >
-                <p className="text-gray-300">{f.name}</p>
-                <p className="text-center text-2xl">{f.glm5 ? "✅" : "❌"}</p>
-                <p className="text-center text-2xl">{f.turbo ? "✅" : "❌"}</p>
-              </div>
-            ))}
-            <div className="p-6 bg-gray-800/30">
-              <p className="text-sm text-gray-400">
-                <strong className="text-white">Nota:</strong> Ambos modelos comparten la misma arquitectura base (744B params). La diferencia radica en la optimización de inferencia del Turbo para escenarios de agente.
-              </p>
+            <div className="mt-10 pt-6 border-t border-white/[0.06] flex justify-between text-[11px] text-white/25" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              <span>GLM-5 saves ~33% input, ~28% output</span>
+              <span>source: openrouter.ai</span>
             </div>
-          </div>
+          </GlowCard>
         </div>
       )}
 
       {/* Verdict Tab */}
-      {activeTab === "verdict" && (
-        <div className="max-w-4xl mx-auto px-6 pb-20">
-          <div className="bg-gray-900 rounded-2xl border border-gray-800 p-8">
-            <h3 className="text-2xl font-bold mb-6 text-center">🏆 ¿Cuál elegir?</h3>
-            <div className="space-y-4">
-              {verdict.map((v, i) => (
-                <div key={i} className="flex items-start gap-4 bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
-                  <span className="text-gray-500 text-sm font-mono mt-1">#{i + 1}</span>
+      {tab === "verdict" && (
+        <div className="max-w-3xl mx-auto px-6 pb-32">
+          <div className="space-y-3">
+            {verdict.map((v, i) => (
+              <GlowCard key={i} glow={v.color} className="!p-6">
+                <div className="flex items-center gap-6">
+                  <span className="text-white/10 text-xs font-mono w-6">{String(i + 1).padStart(2, "0")}</span>
                   <div className="flex-1">
-                    <p className="text-white font-medium">{v.category}</p>
-                    <p className="text-gray-400 text-sm mt-0.5">{v.reason}</p>
+                    <p className="text-white/70 text-sm font-medium">{v.cat}</p>
+                    <p className="text-white/25 text-xs mt-0.5">{v.reason}</p>
                   </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      v.winner === "GLM-5"
-                        ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                        : "bg-orange-500/20 text-orange-400 border border-orange-500/30"
-                    }`}
-                  >
+                  <span className={`px-3 py-1 rounded-lg text-[10px] uppercase tracking-wider font-bold ${v.color === "blue" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "bg-orange-500/10 text-orange-400 border border-orange-500/20"}`}>
                     {v.winner}
                   </span>
                 </div>
-              ))}
-            </div>
+              </GlowCard>
+            ))}
+          </div>
 
-            <div className="mt-8 p-6 bg-gradient-to-r from-gray-800/80 to-gray-900/80 rounded-xl border border-gray-700">
-              <h4 className="text-lg font-bold mb-3">🦞 Recomendación de Clawy</h4>
-              <p className="text-gray-300 leading-relaxed">
-                Para <strong>desarrollo complejo</strong> (Next.js, Solana, Web3, debugging): usa <strong className="text-blue-400">GLM-5</strong>. 
-                Tiene benchmarks comprobados y funciona bien en producción.
-              </p>
-              <p className="text-gray-300 leading-relaxed mt-2">
-                Para <strong>tareas de agente</strong> (chats, tool calls, heartbeats, interacción rápida): usa <strong className="text-orange-400">GLM-5-Turbo</strong>. 
-                Más responsivo, optimizado para nuestro caso de uso en OpenClaw.
-              </p>
-              <p className="text-gray-500 text-sm mt-4">
-                * Esta web fue creada completamente por GLM-5-Turbo como prueba de capacidad.
-              </p>
-            </div>
+          {/* Recommendation */}
+          <div className="mt-10 p-8 rounded-2xl bg-gradient-to-br from-white/[0.04] to-transparent border border-white/[0.06]">
+            <p className="text-[10px] text-white/20 uppercase tracking-[0.3em] mb-4">🦞 Recommendation</p>
+            <p className="text-white/50 text-sm leading-relaxed">
+              <span className="text-blue-400 font-medium">GLM‑5</span> for complex development (Next.js, Solana, Web3, debugging).<br />
+              <span className="text-orange-400 font-medium">GLM‑5‑Turbo</span> for agent tasks (chats, tool calls, heartbeats, fast interactions).
+            </p>
+            <p className="text-white/15 text-[11px] mt-4" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              * This page was built by GLM‑5‑Turbo — the proof is in the pixels.
+            </p>
           </div>
         </div>
       )}
 
       {/* Footer */}
-      <div className="border-t border-gray-800 py-8 text-center">
-        <p className="text-gray-600 text-sm">
-          Built by Clawy 🐾 | GLM-5-Turbo | Z.AI + OpenClaw | March 2026
+      <div className="border-t border-white/[0.04] py-10 text-center">
+        <p className="text-white/15 text-[10px] uppercase tracking-[0.3em]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+          Clawy 🐾 — GLM‑5‑Turbo — Z.AI — OpenClaw — 2026
         </p>
       </div>
     </div>
   );
 }
 
-function Row({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function Stat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-gray-800/50">
-      <span className="text-gray-400 text-sm">{label}</span>
-      <span className={`text-sm font-medium ${highlight ? "text-green-400" : "text-white"}`}>{value}</span>
+    <div className="flex items-center justify-between">
+      <span className="text-white/20 text-[11px] uppercase tracking-wider">{label}</span>
+      <span className={`text-sm ${highlight ? "text-emerald-400 font-bold" : "text-white/60 font-medium"}`}>
+        <AnimatedNumber value={value} />
+      </span>
+    </div>
+  );
+}
+
+function PriceRow({ label, a, b, aW, bW }: { label: string; a: string; b: string; aW: number; bW: number }) {
+  return (
+    <div>
+      <p className="text-[10px] text-white/20 uppercase tracking-[0.3em] mb-4">{label}</p>
+      <div className="space-y-3">
+        <div className="flex items-center gap-4">
+          <span className="text-[10px] text-blue-400/60 w-16 text-right font-mono">GLM‑5</span>
+          <div className="flex-1 h-7 bg-white/[0.03] rounded-lg overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-blue-500/40 to-blue-500/80 rounded-lg flex items-center justify-end pr-4 transition-all duration-1000" style={{ width: `${aW}%` }}>
+              <span className="text-[11px] font-bold text-white font-mono">{a}</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-[10px] text-orange-400/60 w-16 text-right font-mono">Turbo</span>
+          <div className="flex-1 h-7 bg-white/[0.03] rounded-lg overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-orange-500/40 to-red-500/80 rounded-lg flex items-center justify-end pr-4 transition-all duration-1000" style={{ width: `${bW}%` }}>
+              <span className="text-[11px] font-bold text-white font-mono">{b}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

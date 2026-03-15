@@ -3,5 +3,11 @@
 @tailwind utilities;
 
 body {
-  background: #030712;
+  background: #06060b;
+  font-family: var(--font-outfit), sans-serif;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.06) transparent;
 }
